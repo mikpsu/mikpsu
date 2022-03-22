@@ -148,7 +148,7 @@ for entry in os.scandir(directory):
 
             print('Payment Method:', paymentType)
 
-        row = row + 1
+        row += 1
         #end iteration
 workbook.close()
 # end ReceiptAnalyzer.py
