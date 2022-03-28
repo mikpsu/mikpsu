@@ -5,23 +5,20 @@
 #  | |____ _| |_| |_) |____) |
 #  |______|_____|____/|_____/ 
 # bring in libraries
-import re, os, xlsxwriter, PyPDF2
+import re, os, xlsxwriter, PyPDF2, slate3k as slate
 
-# Define account
-account = 'Spend'
 # file path of folder containing statements
-statement_path = r"C:\Users\Mike\OneDrive - The Pennsylvania State University\Finances\2021 Taxes\2021 Accounting\PNC Statements"
+statement_path = r"C:\Users\Mike\OneDrive - The Pennsylvania State University\Finances\2021 Taxes\2021 Accounting\Robinhood Statements"
 
 # Setup excel sheet
 # create excel sheet to output information of each receipt
-workbook = xlsxwriter.Workbook(statement_path+r'\SpendAccountSummary.xlsx')
-worksheet = workbook.add_worksheet(account) # add sheet
+workbook = xlsxwriter.Workbook(statement_path+r'\RobinhoodAccountSummary.xlsx')
+worksheet = workbook.add_worksheet() # add sheet
 worksheet.write('A1', 'Period Start')
 worksheet.write('B1', 'Period End')
-worksheet.write('C1', 'Beginning Balance')
-worksheet.write('D1', 'Deposits and Other Additions')
-worksheet.write('E1', 'Checks and Other Deductions')
-worksheet.write('F1', 'Ending Balance')
+worksheet.write('C1', 'Opening Balance')
+worksheet.write('D1', 'Closing Balance')
+
 
 # define spreadsheet formats
 currency_format = workbook.add_format({'num_format': '$#,##0.00'})
@@ -30,41 +27,35 @@ date_format = workbook.add_format({'num_format': 'mm/dd/yy;@'})
 # Loop through each sheet
 row = 1 # index row
 col = 0 # index column
-for entry in os.scandir(statement_path+r"\Spend"):
+for entry in os.scandir(statement_path):
     # creating a pdf file object
     pdfFileObj = open(entry.path, 'rb')
-    
-    # creating a pdf reader object
-    pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
-    page_count = pdfReader.numPages
+    doc = slate.PDF(pdfFileObj)
 
-    # creating a page object
-    pageObj = pdfReader.getPage(0)
     # extracting text from page
-    statement_text = pageObj.extractText()
-    if 1 < page_count:
-        pageObj = pdfReader.getPage(1)
-        statement_text += pageObj.extractText()
-
+    statement_text = doc[0]
+    statement_text = statement_text.replace("$","")
+    statement_text = statement_text.replace(" ","")
+    statement_text = statement_text.replace("\n\n","\n")
+    statement_text = statement_text.replace(",","")
     # print(statement_text)
     # find the total expenditure string
-    BalanceSummary_wild = re.compile("Endingbalance.+Average monthlybalance")
+    BalanceSummary_wild = re.compile("\d.+\n\d.+\n\d.+\n\d.+\n\d.+\n\d.+")
     BalanceSummary_search = re.search(BalanceSummary_wild, statement_text)
     BalanceSummary_figs = BalanceSummary_search.group()
-    print(BalanceSummary_figs)
+    # print(BalanceSummary_figs)
     # Extract the balances
-    BalanceSummary_figs = BalanceSummary_figs.replace("Endingbalance","")
-    BalanceSummary_figs = BalanceSummary_figs.replace("Average monthlybalance","")
-    BalanceSummary_figs_list = re.findall('\d{0,3}\,?\d{0,3}\.\d\d', BalanceSummary_figs)
-    print(BalanceSummary_figs_list)
+    BalanceSummary_figs_list = BalanceSummary_figs.split("\n")
+    del BalanceSummary_figs_list[:4]
+    # print(BalanceSummary_figs_list)
     # Extract the date
-    Period_wild = re.compile("For the period.{22}")
+    Period_wild = re.compile("\d\d\/\d\d\/\d{4}to\d\d\/\d\d\/\d{4}")
     Period_search = re.search(Period_wild, statement_text)
     Statement_period = Period_search.group()
-    
+    # print(Statement_period)
     # Extract the dates
     Statement_period_list = re.findall('\d\d\/\d\d\/\d{4}', Statement_period)
-    
+    print(Statement_period_list)
     # Print values to excel sheet
     worksheet.write(row, 0, Statement_period_list[0], date_format)
     worksheet.write(row, 1, Statement_period_list[1], date_format)
