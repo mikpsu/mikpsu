@@ -8,13 +8,13 @@
 import re, os, xlsxwriter, PyPDF2
 
 # Define account
-account = 'Spend'
+account = 'Reserve'
 # file path of folder containing statements
 statement_path = r"C:\Users\Mike\OneDrive - The Pennsylvania State University\Finances\2021 Taxes\2021 Accounting\PNC Statements"
 
 # Setup excel sheet
 # create excel sheet to output information of each receipt
-workbook = xlsxwriter.Workbook(statement_path+r'\SpendAccountSummary.xlsx')
+workbook = xlsxwriter.Workbook(statement_path+r'\ReserveAccountSummary.xlsx')
 worksheet = workbook.add_worksheet(account) # add sheet
 worksheet.write('A1', 'Period Start')
 worksheet.write('B1', 'Period End')
@@ -30,7 +30,7 @@ date_format = workbook.add_format({'num_format': 'mm/dd/yy;@'})
 # Loop through each sheet
 row = 1 # index row
 col = 0 # index column
-for entry in os.scandir(statement_path+r"\Spend"):
+for entry in os.scandir(statement_path+r"\Reserve"):
     # creating a pdf file object
     pdfFileObj = open(entry.path, 'rb')
     
